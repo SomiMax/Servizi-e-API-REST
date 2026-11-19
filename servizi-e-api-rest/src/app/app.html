@@ -1,0 +1,48 @@
+<header class="barra">
+  <div class="contenitore barra-contenuto">
+    <a class="marchio" routerLink="/posts">
+      <svg class="marchio-icona" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" />
+        <rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" opacity="0.32" />
+        <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" opacity="0.55" />
+        <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" />
+      </svg>
+      <span>JSONPlaceholder</span>
+    </a>
+
+    <nav class="navigazione" aria-label="Navigazione principale">
+      <a routerLink="/posts" routerLinkActive="attivo" [routerLinkActiveOptions]="{ exact: true }">
+        Elenco
+      </a>
+      <a routerLink="/posts/1" routerLinkActive="attivo">
+        Dettaglio
+      </a>
+    </nav>
+
+    <div class="azioni-barra">
+      <button type="button" class="primario btn-nuovo" (click)="vaiANuovoPost()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+        Nuovo post
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="contenitore pagina">
+  <router-outlet />
+</main>
+
+<footer class="piede">
+  <div class="contenitore piede-contenuto">
+    <span>Esploratore API REST · risorsa <span class="mono">/posts</span></span>
+    <span class="tabulare">
+      @if (postService.numeroPost() > 0) {
+        {{ postService.numeroPost() }} post in cache
+      } @else {
+        JSONPlaceholder
+      }
+    </span>
+  </div>
+</footer>

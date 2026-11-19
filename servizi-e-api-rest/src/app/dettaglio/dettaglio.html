@@ -1,0 +1,108 @@
+<div class="lettura">
+  <nav class="briciole" aria-label="Percorso">
+    <a class="indietro" routerLink="/posts">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M19 12H5M12 19l-7-7 7-7" />
+      </svg>
+      Torna all'elenco
+    </a>
+  </nav>
+
+  @if (caricamento()) {
+    <div class="superficie articolo-scheletro" role="status" aria-label="Caricamento del post">
+      <span class="scheletro s-meta"></span>
+      <span class="scheletro s-h1"></span>
+      <span class="scheletro s-h1-corto"></span>
+      <div class="s-divisore"></div>
+      <span class="scheletro s-riga"></span>
+      <span class="scheletro s-riga"></span>
+      <span class="scheletro s-riga-corta"></span>
+    </div>
+  } @else if (errore()) {
+    <div class="avviso-errore anima-ingresso" role="alert">
+      <svg class="icona-errore" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 8v4M12 16h.01" />
+      </svg>
+      <div class="errore-blocco">
+        <p>{{ errore() }}</p>
+        <p class="suggerimento">
+          Gli id validi vanno da 1 a 100. Per provare il caso «rete assente» (stato 0),
+          nella scheda Network degli strumenti per sviluppatori scegli «Offline» e ricarica,
+          oppure disattiva la connessione.
+        </p>
+        <div class="errore-azioni">
+          <button type="button" (click)="carica(id())">Riprova</button>
+          <a class="btn ghost" routerLink="/posts">Torna all'elenco</a>
+        </div>
+      </div>
+    </div>
+  } @else if (post(); as p) {
+    <article class="post superficie anima-ingresso">
+      <header class="post-testata">
+        <p class="occhiello tabulare">
+          <span class="mono">#{{ p.id }}</span>
+          <span aria-hidden="true">·</span>
+          <span>Utente {{ p.userId }}</span>
+          <span aria-hidden="true">·</span>
+          <span class="mono">GET /posts/{{ p.id }}</span>
+        </p>
+        <h1>{{ p.title }}</h1>
+      </header>
+
+      <div class="post-corpo">
+        <p class="corpo">{{ p.body }}</p>
+      </div>
+
+      <footer class="post-piede">
+        <dl class="dettagli-risorsa tabulare">
+          <div>
+            <dt>ID risorsa</dt>
+            <dd class="mono">{{ p.id }}</dd>
+          </div>
+          <div>
+            <dt>Autore</dt>
+            <dd>Utente {{ p.userId }}</dd>
+          </div>
+          <div>
+            <dt>Lunghezza</dt>
+            <dd>{{ p.body.length }} caratteri</dd>
+          </div>
+        </dl>
+
+        <button type="button" class="ghost btn-link" (click)="copiaLink()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          </svg>
+          {{ linkCopiato() ? 'Link copiato' : 'Copia link' }}
+        </button>
+      </footer>
+    </article>
+  }
+
+  @if (!caricamento()) {
+    <nav class="passo-passo" aria-label="Navigazione tra i post">
+      <button type="button" (click)="vai(id() - 1)" [disabled]="!puoPrecedente()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+        Precedente
+      </button>
+
+      <div class="progresso">
+        <span class="posizione mono">{{ id() }} / {{ ultimoId }}</span>
+        <div class="traccia" aria-hidden="true">
+          <div class="traccia-barra" [style.width.%]="percentuale()"></div>
+        </div>
+      </div>
+
+      <button type="button" (click)="vai(id() + 1)" [disabled]="!puoSuccessivo()">
+        Successivo
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14M13 5l7 7-7 7" />
+        </svg>
+      </button>
+    </nav>
+  }
+</div>

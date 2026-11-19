@@ -1,0 +1,188 @@
+<section class="testata anima-ingresso">
+  <div class="testata-titolo">
+    <h1>Archivio post</h1>
+    <p class="sottotitolo">
+      Risorsa <strong>posts</strong> di JSONPlaceholder letta tramite <code>GET /posts</code>.
+    </p>
+  </div>
+
+  <button type="button" (click)="carica()" [disabled]="caricamento()">
+    <svg
+      [class.gira]="caricamento()"
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+      <path d="M21 3v6h-6" />
+    </svg>
+    {{ caricamento() ? 'Aggiornamento…' : 'Ricarica' }}
+  </button>
+</section>
+
+<div class="griglia-principale">
+  <section class="colonna-elenco" aria-label="Elenco dei post">
+    @if (caricamento()) {
+      <div class="superficie lista-scheletro" role="status" aria-label="Caricamento in corso">
+        @for (riga of scheletri; track riga) {
+          <div class="riga-scheletro">
+            <span class="scheletro s-id"></span>
+            <div class="s-testi">
+              <span class="scheletro s-titolo"></span>
+              <span class="scheletro s-corpo"></span>
+            </div>
+          </div>
+        }
+      </div>
+    } @else if (errore()) {
+      <div class="avviso-errore" role="alert">
+        <svg class="icona-errore" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 8v4M12 16h.01" />
+        </svg>
+        <div class="errore-contenuto">
+          <p>{{ errore() }}</p>
+          <button type="button" class="btn-riprova" (click)="carica()">Riprova</button>
+        </div>
+      </div>
+    } @else {
+      <div class="strumenti">
+        <div class="campo-ricerca">
+          <svg class="icona-cerca" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <input
+            #campoFiltro
+            type="search"
+            placeholder="Filtra per titolo o contenuto…"
+            aria-label="Filtra per titolo o contenuto"
+            [value]="filtro()"
+            (input)="filtro.set(campoFiltro.value)"
+          />
+        </div>
+
+        <select
+          #selettoreUtente
+          class="filtro-utente"
+          aria-label="Filtra per autore"
+          [value]="filtroUtente() ?? ''"
+          (change)="impostaUtente(selettoreUtente.value)"
+        >
+          <option value="">Tutti gli utenti</option>
+          @for (u of utenti(); track u) {
+            <option [value]="u">Utente {{ u }}</option>
+          }
+        </select>
+
+        <span class="conteggio tabulare">
+          {{ numeroFiltrati() }} di {{ post().length }} post
+        </span>
+      </div>
+
+      <ul class="lista superficie anima-ingresso">
+        @for (p of filtrati(); track p.id) {
+          <li class="scheda">
+            <a class="scheda-link" [routerLink]="['/posts', p.id]">
+              <span class="id mono">#{{ p.id }}</span>
+              <div class="scheda-testo">
+                <span class="titolo">{{ p.title }}</span>
+                <p class="anteprima">{{ p.body }}</p>
+                <span class="meta tabulare">Utente {{ p.userId }} · Post {{ p.id }}</span>
+              </div>
+              <span class="dettaglio" aria-hidden="true">
+                Apri
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14M13 5l7 7-7 7" />
+                </svg>
+              </span>
+            </a>
+          </li>
+        } @empty {
+          <li class="vuoto">
+            <p>Nessun post corrisponde ai filtri attivi.</p>
+            @if (haFiltriAttivi()) {
+              <button type="button" (click)="azzeraFiltri()">Azzera filtri</button>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <aside class="nuovo superficie" id="nuovo-post" aria-labelledby="titolo-nuovo">
+    <div class="nuovo-testa">
+      <h2 id="titolo-nuovo">Crea un nuovo post</h2>
+      <span class="endpoint-etichetta mono">POST /posts</span>
+    </div>
+
+    <p class="sottotitolo-form">
+      JSONPlaceholder risponde <code>201 Created</code> con l'oggetto inviato e un nuovo id, ma non
+      persiste i dati: ricaricando l'elenco il post non comparirà.
+    </p>
+
+    <div class="campi">
+      <label for="campo-titolo">
+        <span>Titolo</span>
+        <input
+          #campoTitolo
+          id="campo-titolo"
+          type="text"
+          placeholder="Es. Appunti sulle API REST"
+          (input)="erroreForm.set(null)"
+        />
+      </label>
+
+      <label for="campo-testo">
+        <span>Contenuto</span>
+        <textarea
+          #campoTesto
+          id="campo-testo"
+          rows="4"
+          placeholder="Scrivi il corpo del post…"
+          (input)="erroreForm.set(null)"
+        ></textarea>
+      </label>
+    </div>
+
+    @if (erroreForm()) {
+      <p class="avviso-form" role="alert">{{ erroreForm() }}</p>
+    }
+
+    <button
+      type="button"
+      class="primario btn-invia"
+      [disabled]="invio()"
+      (click)="crea(campoTitolo, campoTesto)"
+    >
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="m22 2-7 20-4-9-9-4Z" />
+        <path d="M22 2 11 13" />
+      </svg>
+      {{ invio() ? 'Invio in corso…' : 'Invia con POST' }}
+    </button>
+
+    @if (creato(); as c) {
+      <div class="risposta-pannello anima-ingresso">
+        <div class="risposta-testa">
+          <span class="stato-ok mono">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+            201 Created
+          </span>
+          <button type="button" class="btn-copia" (click)="copiaRisposta()">
+            {{ copiato() ? 'Copiato' : 'Copia JSON' }}
+          </button>
+        </div>
+        <pre>{{ c | json }}</pre>
+      </div>
+    }
+  </aside>
+</div>
