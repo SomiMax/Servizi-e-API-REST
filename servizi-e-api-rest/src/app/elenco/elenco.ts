@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  HostListener,
+  OnInit,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { JsonPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
@@ -15,30 +25,25 @@ import { messaggioErrore } from '../errori';
 })
 export class Elenco implements OnInit {
   private readonly postService = inject(PostService);
+  private readonly campoFiltroRef = viewChild<ElementRef<HTMLInputElement>>('campoFiltro');
 
   readonly post = this.postService.post;
   readonly filtro = signal('');
   readonly filtroUtente = signal<number | null>(null);
   readonly scheletri = [1, 2, 3, 4, 5, 6];
 
-  readonly utenti = computed(() => {
-    const set = new Set(this.post().map((p) => p.userId));
-    return Array.from(set).sort((a, b) => a - b);
-  });
+  readonly utenti = computed(() =>
+    [...new Set(this.post().map((p) => p.userId))].sort((a, b) => a - b),
+  );
 
   readonly filtrati = computed(() => {
     const testo = this.filtro().trim().toLowerCase();
     const utente = this.filtroUtente();
-
-    return this.post().filter((p) => {
-      if (utente !== null && p.userId !== utente) {
-        return false;
-      }
-      if (testo === '') {
-        return true;
-      }
-      return p.title.toLowerCase().includes(testo) || p.body.toLowerCase().includes(testo);
-    });
+    return this.post().filter(
+      (p) =>
+        (utente === null || p.userId === utente) &&
+        (!testo || p.title.toLowerCase().includes(testo) || p.body.toLowerCase().includes(testo)),
+    );
   });
 
   readonly numeroFiltrati = computed(() => this.filtrati().length);
@@ -54,24 +59,57 @@ export class Elenco implements OnInit {
   readonly copiato = signal(false);
 
   ngOnInit(): void {
-    this.carica();
+    if (this.post().length === 0) {
+      this.carica();
+    }
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  gestisciScorciatoia(event: KeyboardEvent): void {
+    if (
+      event.key !== '/' ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.altKey ||
+      (event.target as HTMLElement | null)?.closest('input, textarea, select, [contenteditable]')
+    ) {
+      return;
+    }
+    const input = this.campoFiltroRef()?.nativeElement;
+    if (input) {
+      event.preventDefault();
+      input.focus();
+      input.select();
+    }
+  }
+
+  preparaTransizione(id: number): void {
+    this.postService.impostaTransizione(id, 'morph');
+  }
+
+  haTransizioneMorph(id: number): boolean {
+    return this.postService.postAttivoId() === id && this.postService.modalitaTransizione() === 'morph';
   }
 
   carica(): void {
     this.caricamento.set(true);
     this.errore.set(null);
-
     this.postService.caricaTutti().subscribe({
       next: () => this.caricamento.set(false),
-      error: (errore: HttpErrorResponse) => {
-        this.errore.set(messaggioErrore(errore));
+      error: (err: HttpErrorResponse) => {
+        this.errore.set(messaggioErrore(err));
         this.caricamento.set(false);
       },
     });
   }
 
-  impostaUtente(valore: string): void {
-    this.filtroUtente.set(valore === '' ? null : Number(valore));
+  selezionaUtente(utente: number | null): void {
+    this.filtroUtente.set(this.filtroUtente() === utente ? null : utente);
+  }
+
+  azzeraRicerca(): void {
+    this.filtro.set('');
+    this.campoFiltroRef()?.nativeElement.focus();
   }
 
   azzeraFiltri(): void {
@@ -80,18 +118,16 @@ export class Elenco implements OnInit {
   }
 
   crea(campoTitolo: HTMLInputElement, campoTesto: HTMLTextAreaElement): void {
-    const titolo = campoTitolo.value.trim();
-    const testo = campoTesto.value.trim();
-
-    if (titolo === '' || testo === '') {
+    const title = campoTitolo.value.trim();
+    const body = campoTesto.value.trim();
+    if (!title || !body) {
       this.erroreForm.set('Inserisci sia il titolo sia il testo prima di inviare.');
       return;
     }
 
     this.erroreForm.set(null);
     this.invio.set(true);
-
-    this.postService.crea({ userId: 1, title: titolo, body: testo }).subscribe({
+    this.postService.crea({ userId: 1, title, body }).subscribe({
       next: (risposta) => {
         this.creato.set(risposta);
         this.copiato.set(false);
@@ -99,8 +135,8 @@ export class Elenco implements OnInit {
         campoTitolo.value = '';
         campoTesto.value = '';
       },
-      error: (errore: HttpErrorResponse) => {
-        this.erroreForm.set(`Invio non riuscito. ${messaggioErrore(errore)}`);
+      error: (err: HttpErrorResponse) => {
+        this.erroreForm.set(`Invio non riuscito. ${messaggioErrore(err)}`);
         this.invio.set(false);
       },
     });
@@ -108,9 +144,7 @@ export class Elenco implements OnInit {
 
   copiaRisposta(): void {
     const risposta = this.creato();
-    if (!risposta || !navigator.clipboard) {
-      return;
-    }
+    if (!risposta || !navigator.clipboard) return;
     navigator.clipboard.writeText(JSON.stringify(risposta, null, 2)).then(() => {
       this.copiato.set(true);
       setTimeout(() => this.copiato.set(false), 1800);

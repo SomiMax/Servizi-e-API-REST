@@ -1,188 +1,217 @@
-<section class="testata anima-ingresso">
-  <div class="testata-titolo">
-    <h1>Archivio post</h1>
-    <p class="sottotitolo">
-      Risorsa <strong>posts</strong> di JSONPlaceholder letta tramite <code>GET /posts</code>.
-    </p>
+<section class="hero-bento ingresso-morbido" aria-label="Panoramica e creazione post">
+  <div class="hero-intro superficie">
+    <div class="hero-top">
+      <span class="pill pill-primario mono">GET /posts</span>
+      <button type="button" class="btn-ricarica" (click)="carica()" [disabled]="caricamento()">
+        <svg [class.gira]="caricamento()" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+          <path d="M21 3v6h-6" />
+        </svg>
+        {{ caricamento() ? 'Aggiornamento…' : 'Ricarica' }}
+      </button>
+    </div>
+
+    <div class="hero-copy">
+      <h1 data-route-heading tabindex="-1">Archivio post</h1>
+      <p class="sottotitolo">
+        Esplora i contenuti di JSONPlaceholder, filtra per autore o testo e testa richieste
+        <code>POST /posts</code> in tempo reale.
+      </p>
+    </div>
+
+    <div class="hero-metriche tabulare">
+      <div class="metrica">
+        <span class="metrica-valore mono">{{ post().length || '—' }}</span>
+        <span class="metrica-etichetta">Post totali</span>
+      </div>
+      <div class="metrica">
+        <span class="metrica-valore mono">{{ utenti().length || '—' }}</span>
+        <span class="metrica-etichetta">Autori</span>
+      </div>
+      <div class="metrica">
+        <span class="metrica-valore mono">{{ numeroFiltrati() }}</span>
+        <span class="metrica-etichetta">Visibili</span>
+      </div>
+    </div>
+
+    <div class="campo-ricerca">
+      <svg class="icona-cerca" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.3-4.3" />
+      </svg>
+      <input #campoFiltro type="search" placeholder="Cerca per titolo o contenuto…"
+        aria-label="Filtra per titolo o contenuto" [value]="filtro()" (input)="filtro.set(campoFiltro.value)" />
+      @if (filtro().trim() !== '') {
+      <button type="button" class="ghost btn-pulisci" aria-label="Cancella ricerca" (click)="azzeraRicerca()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg>
+      </button>
+      } @else {
+      <kbd class="tasto-hint hint-tasto mono" aria-hidden="true">/</kbd>
+      }
+    </div>
   </div>
 
-  <button type="button" (click)="carica()" [disabled]="caricamento()">
-    <svg
-      [class.gira]="caricamento()"
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M21 12a9 9 0 1 1-2.64-6.36" />
-      <path d="M21 3v6h-6" />
-    </svg>
-    {{ caricamento() ? 'Aggiornamento…' : 'Ricarica' }}
-  </button>
-</section>
-
-<div class="griglia-principale">
-  <section class="colonna-elenco" aria-label="Elenco dei post">
-    @if (caricamento()) {
-      <div class="superficie lista-scheletro" role="status" aria-label="Caricamento in corso">
-        @for (riga of scheletri; track riga) {
-          <div class="riga-scheletro">
-            <span class="scheletro s-id"></span>
-            <div class="s-testi">
-              <span class="scheletro s-titolo"></span>
-              <span class="scheletro s-corpo"></span>
-            </div>
-          </div>
-        }
-      </div>
-    } @else if (errore()) {
-      <div class="avviso-errore" role="alert">
-        <svg class="icona-errore" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 8v4M12 16h.01" />
-        </svg>
-        <div class="errore-contenuto">
-          <p>{{ errore() }}</p>
-          <button type="button" class="btn-riprova" (click)="carica()">Riprova</button>
-        </div>
-      </div>
-    } @else {
-      <div class="strumenti">
-        <div class="campo-ricerca">
-          <svg class="icona-cerca" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
-          <input
-            #campoFiltro
-            type="search"
-            placeholder="Filtra per titolo o contenuto…"
-            aria-label="Filtra per titolo o contenuto"
-            [value]="filtro()"
-            (input)="filtro.set(campoFiltro.value)"
-          />
-        </div>
-
-        <select
-          #selettoreUtente
-          class="filtro-utente"
-          aria-label="Filtra per autore"
-          [value]="filtroUtente() ?? ''"
-          (change)="impostaUtente(selettoreUtente.value)"
-        >
-          <option value="">Tutti gli utenti</option>
-          @for (u of utenti(); track u) {
-            <option [value]="u">Utente {{ u }}</option>
-          }
-        </select>
-
-        <span class="conteggio tabulare">
-          {{ numeroFiltrati() }} di {{ post().length }} post
-        </span>
-      </div>
-
-      <ul class="lista superficie anima-ingresso">
-        @for (p of filtrati(); track p.id) {
-          <li class="scheda">
-            <a class="scheda-link" [routerLink]="['/posts', p.id]">
-              <span class="id mono">#{{ p.id }}</span>
-              <div class="scheda-testo">
-                <span class="titolo">{{ p.title }}</span>
-                <p class="anteprima">{{ p.body }}</p>
-                <span class="meta tabulare">Utente {{ p.userId }} · Post {{ p.id }}</span>
-              </div>
-              <span class="dettaglio" aria-hidden="true">
-                Apri
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M5 12h14M13 5l7 7-7 7" />
-                </svg>
-              </span>
-            </a>
-          </li>
-        } @empty {
-          <li class="vuoto">
-            <p>Nessun post corrisponde ai filtri attivi.</p>
-            @if (haFiltriAttivi()) {
-              <button type="button" (click)="azzeraFiltri()">Azzera filtri</button>
-            }
-          </li>
-        }
-      </ul>
-    }
-  </section>
-
-  <aside class="nuovo superficie" id="nuovo-post" aria-labelledby="titolo-nuovo">
-    <div class="nuovo-testa">
-      <h2 id="titolo-nuovo">Crea un nuovo post</h2>
-      <span class="endpoint-etichetta mono">POST /posts</span>
+  <aside class="hero-composer superficie superficie-accento" id="nuovo-post" aria-labelledby="titolo-nuovo">
+    <div class="composer-testa">
+      <h2 id="titolo-nuovo">Nuovo post</h2>
+      <span class="pill pill-primario mono">POST /posts</span>
     </div>
 
     <p class="sottotitolo-form">
-      JSONPlaceholder risponde <code>201 Created</code> con l'oggetto inviato e un nuovo id, ma non
-      persiste i dati: ricaricando l'elenco il post non comparirà.
+      Simula una creazione <code>201 Created</code>: la risposta restituisce il nuovo oggetto senza persisterlo.
     </p>
 
     <div class="campi">
       <label for="campo-titolo">
         <span>Titolo</span>
-        <input
-          #campoTitolo
-          id="campo-titolo"
-          type="text"
-          placeholder="Es. Appunti sulle API REST"
-          (input)="erroreForm.set(null)"
-        />
+        <input #campoTitolo id="campo-titolo" type="text" required placeholder="Es. Guida alle API REST"
+          (input)="erroreForm.set(null)" />
       </label>
 
       <label for="campo-testo">
         <span>Contenuto</span>
-        <textarea
-          #campoTesto
-          id="campo-testo"
-          rows="4"
-          placeholder="Scrivi il corpo del post…"
-          (input)="erroreForm.set(null)"
-        ></textarea>
+        <textarea #campoTesto id="campo-testo" rows="3" required placeholder="Scrivi il corpo del post…"
+          (input)="erroreForm.set(null)"></textarea>
       </label>
     </div>
 
     @if (erroreForm()) {
-      <p class="avviso-form" role="alert">{{ erroreForm() }}</p>
+    <p class="avviso-form ingresso-morbido" role="alert">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 8v4M12 16h.01" />
+      </svg>
+      <span>{{ erroreForm() }}</span>
+    </p>
     }
 
-    <button
-      type="button"
-      class="primario btn-invia"
-      [disabled]="invio()"
-      (click)="crea(campoTitolo, campoTesto)"
-    >
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <button type="button" class="primario btn-invia" [disabled]="invio()" (click)="crea(campoTitolo, campoTesto)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="m22 2-7 20-4-9-9-4Z" />
         <path d="M22 2 11 13" />
       </svg>
-      {{ invio() ? 'Invio in corso…' : 'Invia con POST' }}
+      {{ invio() ? 'Invio in corso…' : 'Pubblica con POST' }}
     </button>
 
     @if (creato(); as c) {
-      <div class="risposta-pannello anima-ingresso">
-        <div class="risposta-testa">
-          <span class="stato-ok mono">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M20 6 9 17l-5-5" />
-            </svg>
-            201 Created
-          </span>
-          <button type="button" class="btn-copia" (click)="copiaRisposta()">
-            {{ copiato() ? 'Copiato' : 'Copia JSON' }}
-          </button>
-        </div>
-        <pre>{{ c | json }}</pre>
+    <div class="risposta-pannello ingresso-morbido">
+      <div class="risposta-testa">
+        <button type="button" aria-label="Chiudi" (click)="creato.set(null)">x</button>
+        <span class="stato-ok mono">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+          201 Created
+        </span>
+        <button type="button" class="btn-copia" (click)="copiaRisposta()">
+          {{ copiato() ? 'Copiato' : 'Copia JSON' }}
+        </button>
       </div>
+      <pre>{{ c | json }}</pre>
+    </div>
     }
   </aside>
-</div>
+</section>
+
+<section class="sezione-archivio" aria-label="Elenco dei post">
+  @if (caricamento()) {
+  <div class="griglia-post" role="status" aria-label="Caricamento in corso">
+    @for (riga of scheletri; track riga) {
+    <div class="superficie scheda-scheletro">
+      <span class="scheletro s-pill"></span>
+      <span class="scheletro s-titolo"></span>
+      <span class="scheletro s-corpo"></span>
+      <span class="scheletro s-corpo-corto"></span>
+    </div>
+    }
+  </div>
+  } @else if (errore()) {
+  <div class="avviso-errore ingresso-morbido" role="alert">
+    <svg class="icona-errore" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 8v4M12 16h.01" />
+    </svg>
+    <div class="errore-contenuto">
+      <p>{{ errore() }}</p>
+      <button type="button" (click)="carica()">Riprova</button>
+    </div>
+  </div>
+  } @else {
+  <div class="barra-filtri">
+    <div class="chip-autori" role="group" aria-label="Filtra per autore">
+      <button type="button" class="chip" [class.attivo]="filtroUtente() === null"
+        [attr.aria-pressed]="filtroUtente() === null" (click)="filtroUtente.set(null)">
+        Tutti
+      </button>
+      @for (u of utenti(); track u) {
+      <button type="button" class="chip tabulare" [class.attivo]="filtroUtente() === u"
+        [attr.aria-pressed]="filtroUtente() === u" (click)="selezionaUtente(u)">
+        Utente {{ u }}
+      </button>
+      }
+    </div>
+
+    @if (haFiltriAttivi()) {
+    <button type="button" class="ghost btn-azzera" (click)="azzeraFiltri()">
+      Azzera filtri
+    </button>
+    }
+  </div>
+
+  @if (filtrati().length > 0) {
+  <ul class="griglia-post">
+    @for (p of filtrati(); track p.id; let primo = $first) {
+    <li class="scheda" [class.in-evidenza]="primo && !haFiltriAttivi()">
+      <a class="scheda-card superficie" [routerLink]="['/posts', p.id]" (pointerdown)="preparaTransizione(p.id)"
+        (click)="preparaTransizione(p.id)">
+        <div class="card-top">
+          <span class="pill pill-primario mono card-id"
+            [style.view-transition-name]="haTransizioneMorph(p.id) ? 'post-badge' : null">
+            #{{ p.id }}
+          </span>
+          <span class="pill tabulare">Utente {{ p.userId }}</span>
+          @if (primo && !haFiltriAttivi()) {
+          <span class="pill pill-evidenza">In evidenza</span>
+          }
+        </div>
+
+        <div class="card-corpo">
+          <h2 class="card-titolo" [style.view-transition-name]="haTransizioneMorph(p.id) ? 'post-title' : null">
+            {{ p.title }}
+          </h2>
+          <p class="card-anteprima">{{ p.body }}</p>
+        </div>
+
+        <div class="card-piede">
+          <span class="mono card-endpoint">/posts/{{ p.id }}</span>
+          <span class="card-azione" aria-hidden="true">
+            Leggi
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14M13 5l7 7-7 7" />
+            </svg>
+          </span>
+        </div>
+      </a>
+    </li>
+    }
+  </ul>
+  } @else {
+  <div class="vuoto superficie ingresso-morbido">
+    <p>Nessun post corrisponde ai filtri attivi.</p>
+    @if (haFiltriAttivi()) {
+    <button type="button" class="primario" (click)="azzeraFiltri()">Azzera filtri</button>
+    }
+  </div>
+  }
+  }
+</section>

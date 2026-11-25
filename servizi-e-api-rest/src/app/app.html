@@ -1,34 +1,42 @@
-<header class="barra">
-  <div class="contenitore barra-contenuto">
-    <a class="marchio" routerLink="/posts">
-      <svg class="marchio-icona" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" />
-        <rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" opacity="0.32" />
-        <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" opacity="0.55" />
-        <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" />
-      </svg>
-      <span>JSONPlaceholder</span>
-    </a>
-
-    <nav class="navigazione" aria-label="Navigazione principale">
-      <a routerLink="/posts" routerLinkActive="attivo" [routerLinkActiveOptions]="{ exact: true }">
-        Elenco
+<div class="barra-wrapper">
+  <header class="barra">
+    <div class="barra-contenuto">
+      <a class="marchio" routerLink="/posts">
+        <span class="marchio-badge" aria-hidden="true">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="8" height="8" rx="2.5" fill="currentColor" />
+            <rect x="13" y="3" width="8" height="8" rx="4" fill="currentColor" opacity="0.45" />
+            <rect x="3" y="13" width="8" height="8" rx="4" fill="currentColor" opacity="0.65" />
+            <rect x="13" y="13" width="8" height="8" rx="2.5" fill="currentColor" />
+          </svg>
+        </span>
+        <span class="marchio-testo">
+          <strong>RoseAPI</strong>
+          <span class="marchio-sub">JSONPlaceholder</span>
+        </span>
       </a>
-      <a routerLink="/posts/1" routerLinkActive="attivo">
-        Dettaglio
-      </a>
-    </nav>
 
-    <div class="azioni-barra">
-      <button type="button" class="primario btn-nuovo" (click)="vaiANuovoPost()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-        Nuovo post
-      </button>
+      <nav class="navigazione" aria-label="Navigazione principale">
+        <a routerLink="/posts" routerLinkActive="attivo" [routerLinkActiveOptions]="{ exact: true }">
+          Esplora
+        </a>
+        <a routerLink="/posts/1" routerLinkActive="attivo">
+          Lettura
+        </a>
+      </nav>
+
+      <div class="azioni-barra">
+        <button type="button" class="primario btn-nuovo" (click)="vaiANuovoPost()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          Nuovo post
+        </button>
+      </div>
     </div>
-  </div>
-</header>
+    <div class="barra-progresso" aria-hidden="true"></div>
+  </header>
+</div>
 
 <main class="contenitore pagina">
   <router-outlet />
@@ -36,12 +44,15 @@
 
 <footer class="piede">
   <div class="contenitore piede-contenuto">
-    <span>Esploratore API REST · risorsa <span class="mono">/posts</span></span>
-    <span class="tabulare">
+    <span class="piede-sx">
+      <span class="stato-puntino" aria-hidden="true"></span>
+      <span>Esploratore REST · <span class="mono">/posts</span></span>
+    </span>
+    <span class="tabulare piede-dx">
       @if (postService.numeroPost() > 0) {
-        {{ postService.numeroPost() }} post in cache
+        <span class="mono">{{ postService.numeroPost() }}</span> post caricati
       } @else {
-        JSONPlaceholder
+        Angular · JSONPlaceholder
       }
     </span>
   </div>
